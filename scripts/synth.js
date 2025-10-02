@@ -1,29 +1,22 @@
-// Audio setup, oscilloscope drawing, and note routing to the worklet
+// Audio setup and note routing to the worklet
 
 import { A4, A4_MIDI } from './keyboard.js';
 
 const workletURL = '/worklets/quarter-tone.js';
 
 export class QuarterToneSynth {
-  constructor(scopeCanvas){
+  constructor(){
     this.ctx = new (window.AudioContext || window.webkitAudioContext)();
     this.started = false;
     this.synthNode = null;
     this.gain = null;
     this.analyser = null;
 
-    this.wave = 'sawtooth';
-    this.adsr = { a:0.01, d:0.1, s:0.7, r:0.2 };
     this.octaveShift = 0;
 
     this.held = new Map(); // key -> noteId
 
-    this.scopeEl = scopeCanvas;
-    this.scopeCtx = scopeCanvas.getContext('2d');
     this._noteUid = 1;
-
-    // this._drawScope = this._drawScope.bind(this);
-    // requestAnimationFrame(this._drawScope);
   }
 
   async ensureStarted(){
@@ -43,19 +36,9 @@ export class QuarterToneSynth {
     this.started = true;
 
     // push initial state
-    this.setWave(this.wave);
-    this.setADSR(this.adsr);
     this.setVolume(0.8);
   }
 
-  setWave(w){
-    this.wave = w;
-    if (this.synthNode) this.synthNode.port.postMessage({type:'wave', data:w});
-  }
-  setADSR({a,d,s,r}){
-    this.adsr = {a,d,s,r};
-    if (this.synthNode) this.synthNode.port.postMessage({type:'adsr', data:this.adsr});
-  }
   setVolume(v){
     if (this.synthNode) this.synthNode.parameters.get('volume').setValueAtTime(v, this.ctx.currentTime);
   }
@@ -109,27 +92,4 @@ export class QuarterToneSynth {
     this.held.clear();
   }
 
-  _drawScope(){
-    requestAnimationFrame(this._drawScope);
-    const a = this.analyser;
-    if (!a) return;
-    const W = this.scopeEl.width = this.scopeEl.clientWidth * devicePixelRatio;
-    const H = this.scopeEl.height = this.scopeEl.clientHeight * devicePixelRatio;
-    const buf = new Uint8Array(a.fftSize);
-    a.getByteTimeDomainData(buf);
-
-    const g = this.scopeCtx;
-    g.fillStyle = '#0b1117';
-    g.fillRect(0,0,W,H);
-    g.strokeStyle = '#79ffe1';
-    g.lineWidth = 2 * devicePixelRatio;
-    g.beginPath();
-    const step = W / buf.length;
-    for (let i=0;i<buf.length;i++){
-      const y = (buf[i]/255)*H;
-      if (i===0) g.moveTo(0,y);
-      else g.lineTo(i*step, y);
-    }
-    g.stroke();
-  }
 }

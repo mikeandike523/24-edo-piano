@@ -2,9 +2,7 @@ import { buildQwertyKeyboard, keyToIndex, normalizeKey, midiOfC4 } from './keybo
 import { QuarterToneSynth } from './synth.js';
 
 const keyboardEl = document.getElementById('keyboard');
-const scopeEl = document.getElementById('scope');
-
-const synth = new QuarterToneSynth(scopeEl);
+const synth = new QuarterToneSynth();
 
 // Build QWERTY-shaped keyboard with semitone and quarter-tone metadata
 buildQwertyKeyboard(
@@ -21,25 +19,12 @@ buildQwertyKeyboard(
 
 // Controls (unchanged)
 const el = {
-  wave: document.getElementById('wave'),
-  attack: document.getElementById('attack'),
-  decay: document.getElementById('decay'),
-  sustain: document.getElementById('sustain'),
-  release: document.getElementById('release'),
   volume: document.getElementById('volume'),
   octave: document.getElementById('octave'),
-  attackVal: document.getElementById('attackVal'),
-  decayVal: document.getElementById('decayVal'),
-  sustainVal: document.getElementById('sustainVal'),
-  releaseVal: document.getElementById('releaseVal'),
   volumeVal: document.getElementById('volumeVal'),
   octaveVal: document.getElementById('octaveVal'),
 };
 function syncLabels(){
-  el.attackVal.textContent = (+el.attack.value).toFixed(2);
-  el.decayVal.textContent = (+el.decay.value).toFixed(2);
-  el.sustainVal.textContent = (+el.sustain.value).toFixed(2);
-  el.releaseVal.textContent = (+el.release.value).toFixed(2);
   el.volumeVal.textContent = (+el.volume.value).toFixed(2);
   el.octaveVal.textContent = el.octave.value;
 }
@@ -62,11 +47,6 @@ if (hardRefreshBtn) {
 }
 syncLabels();
 ['input','change'].forEach(evt=>{
-  el.wave.addEventListener(evt, ()=> synth.setWave(el.wave.value));
-  el.attack.addEventListener(evt, ()=> { const a=+el.attack.value; el.attackVal.textContent=a.toFixed(2); synth.setADSR({ ...synth.adsr, a });});
-  el.decay.addEventListener(evt, ()=> { const d=+el.decay.value; el.decayVal.textContent=d.toFixed(2); synth.setADSR({ ...synth.adsr, d });});
-  el.sustain.addEventListener(evt, ()=> { const s=+el.sustain.value; el.sustainVal.textContent=s.toFixed(2); synth.setADSR({ ...synth.adsr, s });});
-  el.release.addEventListener(evt, ()=> { const r=+el.release.value; el.releaseVal.textContent=r.toFixed(2); synth.setADSR({ ...synth.adsr, r });});
   el.volume.addEventListener(evt, ()=> { const v=+el.volume.value; el.volumeVal.textContent=v.toFixed(2); synth.setVolume(v); });
   el.octave.addEventListener(evt, ()=> { const n=+el.octave.value; el.octaveVal.textContent=n; synth.setOctave(n); });
 });
