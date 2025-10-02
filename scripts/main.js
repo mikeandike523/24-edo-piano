@@ -1,4 +1,4 @@
-import { buildQwertyKeyboard, keyToIndex, normalizeKey, midiOfC4 } from './keyboard.js';
+import { buildQwertyKeyboard, keyToIndex, normalizeKey } from './keyboard.js';
 import { QuarterToneSynth } from './synth.js';
 
 const keyboardEl = document.getElementById('keyboard');
@@ -111,40 +111,3 @@ function setActiveByKey(pc, on){
   elKey.classList.toggle('active', on);
 }
 
-// Auto-play scales
-const playCmajBtn = document.getElementById('playCmaj');
-const playCminBtn = document.getElementById('playCmin');
-let autoNoteId = 0;
-function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
-async function playScale(intervals){
-  await synth.ensureStarted();
-  const beatMs = 60000 / 120;
-  for (let i = 0; i < intervals.length; i++){
-    const semiOffset = intervals[i];
-    const midi = midiOfC4 + semiOffset;
-    const qstep = 0;
-    const keyName = `auto-${autoNoteId++}`;
-    synth.noteOn(midi, qstep, keyName);
-    await sleep(beatMs);
-    synth.noteOff(midi, qstep, keyName);
-  }
-}
-if (playCmajBtn){
-  playCmajBtn.addEventListener('click', () => playScale([0,2,4,5,7,9,11,12]));
-}
-if (playCminBtn){
-  playCminBtn.addEventListener('click', () => playScale([0,2,3,5,7,8,10,12]));
-}
-
-// Test tone control
-const testFreqInput = document.getElementById('testFreq');
-const testToneBtn = document.getElementById('testTone');
-if (testToneBtn && testFreqInput){
-  testToneBtn.addEventListener('click', async () => {
-    const freq = parseFloat(testFreqInput.value) || 440;
-    const keyName = 'test-tone';
-    await synth.ensureStarted();
-    synth.noteOnFreq(freq, keyName);
-    setTimeout(() => synth.noteOffFreq(keyName), 1000);
-  });
-}

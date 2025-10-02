@@ -27,11 +27,6 @@
         <span class="pill"><span id="octaveVal">0</span></span>
       </div>
 
-      <div class="row">
-        <label for="testFreq">Test Tone (Hz)</label>
-        <input id="testFreq" type="number" min="20" max="20000" step="1" value="440">
-        <button id="testTone" class="pill">Test Tone</button>
-      </div>
 
       <div class="section-title">Legend</div>
       <div class="legend">
@@ -40,17 +35,13 @@
         <span class="pill"><span class="swatch sw-halfsharp"></span> Half-sharp ↑</span>
         <span class="pill"><span class="swatch sw-halfflat"></span> Half-flat ↓</span>
       </div>
-      <div class="section-title">Auto-play Scales</div>
-      <div class="row">
-        <button id="playCmaj" class="pill">C Major</button>
-        <button id="playCmin" class="pill">C Minor</button>
-      </div>
 
       <div class="section-title">PC Keyboard</div>
       <div class="row">
         <label for="enableKeyboard">Enable PC Keyboard</label>
-        <input id="enableKeyboard" type="checkbox">
+        <input id="enableKeyboard" type="checkbox" checked>
       </div>
+      <div class="sub" style="margin-top:5px;">Disable keyboard play if other menus not working correctly.</div>
 
       <!-- Oscilloscope removed -->
     </div>
