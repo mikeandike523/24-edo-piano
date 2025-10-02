@@ -6,11 +6,17 @@ const scopeEl = document.getElementById('scope');
 
 const synth = new QuarterToneSynth(scopeEl);
 
-// Build QWERTY-shaped keyboard with the agreed mapping
+// Build QWERTY-shaped keyboard with semitone and quarter-tone metadata
 buildQwertyKeyboard(
   keyboardEl,
-  (qIndex, pc) => { synth.noteOnByIndex(qIndex, pc || String(qIndex)); setActiveByKey(pc, true); },
-  (qIndex, pc) => { synth.noteOffByIndex(qIndex, pc || String(qIndex)); setActiveByKey(pc, false); },
+  (note, pc) => {
+    synth.noteOn(note.midi, note.qstep, pc);
+    setActiveByKey(pc, true);
+  },
+  (note, pc) => {
+    synth.noteOff(note.midi, note.qstep, pc);
+    setActiveByKey(pc, false);
+  },
 );
 
 // Controls (unchanged)
@@ -88,8 +94,8 @@ window.addEventListener('keydown', async (e)=>{
   down.add(key);
 
   await synth.ensureStarted();
-  const q = keyToIndex.get(key);
-  await synth.noteOnByIndex(q, key);
+  const note = keyToIndex.get(key);
+  await synth.noteOn(note.midi, note.qstep, key);
   setActiveByKey(key, true);
 });
 
@@ -98,8 +104,8 @@ window.addEventListener('keyup', (e)=>{
   if (!keyToIndex.has(key)) return;
   e.preventDefault();
   down.delete(key);
-  const q = keyToIndex.get(key);
-  synth.noteOffByIndex(q, key);
+  const note = keyToIndex.get(key);
+  synth.noteOff(note.midi, note.qstep, key);
   setActiveByKey(key, false);
 });
 

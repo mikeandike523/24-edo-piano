@@ -1,6 +1,6 @@
-// Audio setup, 24-TET math, oscilloscope drawing, and note routing to the worklet
+// Audio setup, oscilloscope drawing, and note routing to the worklet
 
-import { A4, A4_MIDI, midiOfC4, STEPS_PER_OCT } from './keyboard.js';
+import { A4, A4_MIDI } from './keyboard.js';
 
 const workletURL = '/worklets/quarter-tone.js';
 
@@ -64,27 +64,36 @@ export class QuarterToneSynth {
   nextNoteId(){ return this._noteUid++; }
 
   // frequency from quarter-tone offset relative to C4
+
   /**
-   * Compute frequency from quarter-tone index relative to C4,
-   * using STEPS_PER_OCT quarter steps per octave.
+   * Compute frequency from midi note number and quarter-step offset.
+   * Quarter-step offset is in quarter tones (e.g. 1 = +¼ tone, -1 = -¼ tone).
    */
-  freqFromQuarterIndex(qIndexFromC4){
-    const semisFromC4 = qIndexFromC4 * 12 / STEPS_PER_OCT;
-    const midi = midiOfC4 + semisFromC4;
-    return A4 * Math.pow(2, (midi - A4_MIDI)/12);
+  freqFromMidi(midiNote, qstep){
+    const semitoneOffset = midiNote + qstep * 0.5;
+    return A4 * Math.pow(2, (semitoneOffset - A4_MIDI) / 12);
   }
 
-  currentBaseQuarterIndex(){ return this.octaveShift * STEPS_PER_OCT; }
-
-  async noteOnByIndex(idx, keyName){
+  /**
+   * Trigger a note-on by midi note and optional quarter-step offset.
+   * @param {number} midiNote - integer semitone (e.g. 60 for C4)
+   * @param {number} qstep - quarter-step offset (0 = natural, ±1 = quarter-tone)
+   * @param {string} keyName - key identifier for tracking note-off
+   */
+  async noteOn(midiNote, qstep, keyName){
     await this.ensureStarted();
     const id = this.nextNoteId();
-    const fq = this.freqFromQuarterIndex(this.currentBaseQuarterIndex() + idx);
+    const transposed = midiNote + this.octaveShift * 12;
+    const freq = this.freqFromMidi(transposed, qstep);
     this.held.set(keyName, id);
-    this.synthNode.port.postMessage({type:'noteOn', data:{freq: fq, id}});
+    this.synthNode.port.postMessage({type:'noteOn', data:{freq, id}});
   }
 
-  noteOffByIndex(idx, keyName){
+  /**
+   * Trigger a note-off for the given key.
+   * @param {string} keyName - key identifier to end the note
+   */
+  noteOff(_, __, keyName){
     const id = this.held.get(keyName);
     if (id){
       this.synthNode.port.postMessage({type:'noteOff', data:{id}});

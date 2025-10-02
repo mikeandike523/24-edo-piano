@@ -1,9 +1,8 @@
-// QWERTY-shaped UI + 24-TET mapping (C4 on 'Z')
+// QWERTY-shaped UI mapping of semitones and quarter-tones (C4 on 'Z')
 // Vertical meaning per column (bottom→top):
 //   natural → natural+qt (↑) → sharp → sharp+qt (♯↑)
 // For E and B columns, there is no sharp/sharp+qt (they are the semitone boundaries).
 
-export const STEPS_PER_OCT = 24;
 export const A4 = 440;
 export const A4_MIDI = 69;
 export const midiOfC4 = 60;
@@ -26,21 +25,14 @@ export const keyToIndex = new Map();
 export function normalizeKey(k){ return k.length===1 ? k.toUpperCase() : k; }
 
 function name12(semi){ return NAT12[((semi%12)+12)%12]; }
-/**
- * Convert semitone offset to quarter-tone index, based on STEPS_PER_OCT.
- * (e.g. STEPS_PER_OCT=24 yields 2 quarter-steps per semitone)
- */
-function qIndexFromSemitone(semi){
-  return (STEPS_PER_OCT / 12) * semi;
-}
 function labelNatural(semi){ return name12(semi).replace('#',''); } // show natural letter only
 function labelSharp(semi){ return name12(semi).replace('#','♯'); }  // pretty sharp
 
 /**
- * Build the QWERTY-shaped keyboard with the agreed mapping.
+ * Build the QWERTY-shaped keyboard with semitone and quarter-tone mapping.
  * @param {HTMLElement} container
- * @param {(qIndex:number, pcKey:string)=>void} onDown
- * @param {(qIndex:number, pcKey:string)=>void} onUp
+ * @param {(note:{midi:number,qstep:number}, pcKey:string)=>void} onDown
+ * @param {(note:{midi:number,qstep:number}, pcKey:string)=>void} onUp
  */
 export function buildQwertyKeyboard(container, onDown, onUp){
   container.innerHTML = '';
@@ -66,15 +58,15 @@ export function buildQwertyKeyboard(container, onDown, onUp){
   for (let col = 0; col < COLUMN_SEMITONES.length; col++){
     const semi = COLUMN_SEMITONES[col];
 
-    // Bottom row: natural
+    // Bottom row: natural (no quarter-tone)
     addKey(rowBottom, ROW_BOTTOM[col], 'natural',
-      qIndexFromSemitone(semi),
+      midiOfC4 + semi, 0,
       labelNatural(semi));
 
     // A row: natural + quarter-tone (↑)
     if (ROW_ALEFT[col]){
       addKey(rowAleft, ROW_ALEFT[col], 'halfsharp',
-        qIndexFromSemitone(semi)+1,
+        midiOfC4 + semi, 1,
         labelNatural(semi) + '↑');
     } else {
       addSpacer(rowAleft);
@@ -83,28 +75,29 @@ export function buildQwertyKeyboard(container, onDown, onUp){
     // Q row: sharp, unless this is E or B column (no sharp)
     if (ROW_QLEFT[col]){
       addKey(rowQleft, ROW_QLEFT[col], 'sharp',
-        qIndexFromSemitone(semi+1),
+        midiOfC4 + semi + 1, 0,
         labelSharp(semi+1));
     } else {
       addSpacer(rowQleft);
     }
 
-    // Number row: sharp + quarter-tone
+    // Number row: sharp + quarter-tone (♯↑)
     if (ROW_NUM[col]){
       addKey(rowNum, ROW_NUM[col], 'halfsharp',
-        qIndexFromSemitone(semi+1)+1,
+        midiOfC4 + semi + 1, 1,
         labelSharp(semi+1) + '↑');
     } else {
       addSpacer(rowNum);
     }
   }
 
-  function addKey(row, pcKey, kind, qIndex, label){
+  function addKey(row, pcKey, kind, midi, qstep, label){
     const div = document.createElement('div');
     div.className = 'key';
     div.dataset.kind = kind;
+    div.dataset.midi = String(midi);
+    div.dataset.qstep = String(qstep);
     div.dataset.key = pcKey;
-    div.dataset.qindex = String(qIndex);
     div.innerHTML = `
       <div class="label">${label}</div>
       <div class="sub">${pcKey}</div>
@@ -113,7 +106,7 @@ export function buildQwertyKeyboard(container, onDown, onUp){
     window.addEventListener('pointerup', ()=> onPointer('up', div));
     row.appendChild(div);
 
-    keyToIndex.set(pcKey, qIndex);
+    keyToIndex.set(pcKey, { midi, qstep });
   }
 
   // keeps gaps aligned visually
