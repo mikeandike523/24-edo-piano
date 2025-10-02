@@ -6,7 +6,9 @@ const workletURL = '/worklets/quarter-tone.js';
 
 export class QuarterToneSynth {
   constructor(){
-    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    this.ctx = new (window.AudioContext || window.webkitAudioContext)({
+        latencyHint: 'interactive'
+    });
     this.started = false;
     this.synthNode = null;
     this.gain = null;
@@ -90,6 +92,30 @@ export class QuarterToneSynth {
       this.synthNode?.port.postMessage({type:'noteOff', data:{id}});
     });
     this.held.clear();
+  }
+
+  /**
+   * Trigger a test tone by frequency directly.
+   * @param {number} freq - frequency in Hz
+   * @param {string} keyName - key identifier for tracking note-off
+   */
+  async noteOnFreq(freq, keyName){
+    await this.ensureStarted();
+    const id = this.nextNoteId();
+    this.held.set(keyName, id);
+    this.synthNode.port.postMessage({type:'noteOn', data:{freq, id}});
+  }
+
+  /**
+   * Trigger note-off for test tone.
+   * @param {string} keyName - key identifier to end the note
+   */
+  noteOffFreq(keyName){
+    const id = this.held.get(keyName);
+    if (id){
+      this.synthNode.port.postMessage({type:'noteOff', data:{id}});
+      this.held.delete(keyName);
+    }
   }
 
 }

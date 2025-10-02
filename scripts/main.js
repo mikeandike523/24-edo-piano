@@ -122,3 +122,16 @@ if (playCmajBtn){
 if (playCminBtn){
   playCminBtn.addEventListener('click', () => playScale([0,2,3,5,7,8,10,12]));
 }
+
+// Test tone control
+const testFreqInput = document.getElementById('testFreq');
+const testToneBtn = document.getElementById('testTone');
+if (testToneBtn && testFreqInput){
+  testToneBtn.addEventListener('click', async () => {
+    const freq = parseFloat(testFreqInput.value) || 440;
+    const keyName = 'test-tone';
+    await synth.ensureStarted();
+    synth.noteOnFreq(freq, keyName);
+    setTimeout(() => synth.noteOffFreq(keyName), 1000);
+  });
+}
