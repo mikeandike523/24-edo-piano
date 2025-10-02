@@ -22,8 +22,8 @@ export class QuarterToneSynth {
     this.scopeCtx = scopeCanvas.getContext('2d');
     this._noteUid = 1;
 
-    this._drawScope = this._drawScope.bind(this);
-    requestAnimationFrame(this._drawScope);
+    // this._drawScope = this._drawScope.bind(this);
+    // requestAnimationFrame(this._drawScope);
   }
 
   async ensureStarted(){
