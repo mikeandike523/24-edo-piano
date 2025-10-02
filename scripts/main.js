@@ -37,6 +37,23 @@ function syncLabels(){
   el.volumeVal.textContent = (+el.volume.value).toFixed(2);
   el.octaveVal.textContent = el.octave.value;
 }
+
+// Hard-refresh: clear caches and reload page
+const hardRefreshBtn = document.getElementById('hardRefresh');
+if (hardRefreshBtn) {
+  hardRefreshBtn.addEventListener('click', async () => {
+    try { localStorage.clear(); sessionStorage.clear(); } catch {}
+    if (window.caches) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(key => caches.delete(key)));
+    }
+    if (navigator.serviceWorker) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(reg => reg.unregister()));
+    }
+    location.reload(true);
+  });
+}
 syncLabels();
 ['input','change'].forEach(evt=>{
   el.wave.addEventListener(evt, ()=> synth.setWave(el.wave.value));

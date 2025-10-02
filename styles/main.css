@@ -135,4 +135,13 @@ select, input[type="checkbox"], input[type="range"]{ accent-color: var(--accent)
 .kbd-inline{
   padding:2px 6px; border:1px solid #263342; border-radius:6px; background:#0e1520;
   color:#cde3f6; font-weight:600; font-size:12px;
+
+}
+
+/* Hard refresh button styling */
+.pill.refresh {
+  margin-top: 8px;
+  background: var(--accent);
+  border-color: var(--accent);
+  cursor: pointer;
 }
