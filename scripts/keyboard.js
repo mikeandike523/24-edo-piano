@@ -26,7 +26,13 @@ export const keyToIndex = new Map();
 export function normalizeKey(k){ return k.length===1 ? k.toUpperCase() : k; }
 
 function name12(semi){ return NAT12[((semi%12)+12)%12]; }
-function qIndexFromSemitone(semi){ return 2*semi; }
+/**
+ * Convert semitone offset to quarter-tone index, based on STEPS_PER_OCT.
+ * (e.g. STEPS_PER_OCT=24 yields 2 quarter-steps per semitone)
+ */
+function qIndexFromSemitone(semi){
+  return (STEPS_PER_OCT / 12) * semi;
+}
 function labelNatural(semi){ return name12(semi).replace('#',''); } // show natural letter only
 function labelSharp(semi){ return name12(semi).replace('#','♯'); }  // pretty sharp
 

@@ -64,8 +64,12 @@ export class QuarterToneSynth {
   nextNoteId(){ return this._noteUid++; }
 
   // frequency from quarter-tone offset relative to C4
+  /**
+   * Compute frequency from quarter-tone index relative to C4,
+   * using STEPS_PER_OCT quarter steps per octave.
+   */
   freqFromQuarterIndex(qIndexFromC4){
-    const semisFromC4 = qIndexFromC4/2;
+    const semisFromC4 = qIndexFromC4 * 12 / STEPS_PER_OCT;
     const midi = midiOfC4 + semisFromC4;
     return A4 * Math.pow(2, (midi - A4_MIDI)/12);
   }
