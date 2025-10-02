@@ -1,0 +1,17 @@
+{
+  "name": "quarter-tone-synth",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "dev": "node dev-server.cjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.11.0",
+  "devDependencies": {
+    "node-static": "^0.7.11"
+
+  }
+
+}
