@@ -72,7 +72,7 @@ select, input[type="checkbox"], input[type="range"]{ accent-color: var(--accent)
   user-select:none;
   -webkit-user-select:none;
   display:flex;
-  flex-direction:column;
+  flex-direction: column-reverse;
   gap:8px;
   padding-bottom:6px;
 }
