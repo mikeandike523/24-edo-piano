@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Quarter-Tone Synth (AudioWorklet • 24-TET)</title>
+  <link rel="stylesheet" href="./styles/main.css" />
+</head>
+<body>
+  <header>
+    <h1>Quarter-Tone Synth (AudioWorklet • 24-TET)</h1>
+    <div class="sub">PC keyboard plays a continuous run of quarter-steps starting at C4. Use <span class="kbd-inline">[</span>/<span class="kbd-inline">]</span> for octave −/+.</div>
+  </header>
+
+  <div class="app">
+    <div class="panel controls">
+      <div class="section-title">Synthesis</div>
+      <div class="row">
+        <label>Waveform</label>
+        <select id="wave">
+          <option value="sine">Sine</option>
+          <option value="triangle">Triangle</option>
+          <option value="square">Square</option>
+          <option value="sawtooth" selected>Saw</option>
+        </select>
+        <span class="pill">Poly up to 16</span>
+      </div>
+      <div class="row">
+        <label>Attack</label>
+        <input id="attack" type="range" min="0" max="0.5" step="0.005" value="0.01">
+        <span class="pill"><span id="attackVal">0.01</span>s</span>
+      </div>
+      <div class="row">
+        <label>Decay</label>
+        <input id="decay" type="range" min="0" max="1.0" step="0.01" value="0.1">
+        <span class="pill"><span id="decayVal">0.10</span>s</span>
+      </div>
+      <div class="row">
+        <label>Sustain</label>
+        <input id="sustain" type="range" min="0" max="1" step="0.01" value="0.7">
+        <span class="pill"><span id="sustainVal">0.70</span></span>
+      </div>
+      <div class="row">
+        <label>Release</label>
+        <input id="release" type="range" min="0" max="2.0" step="0.01" value="0.2">
+        <span class="pill"><span id="releaseVal">0.20</span>s</span>
+      </div>
+      <div class="row">
+        <label>Volume</label>
+        <input id="volume" type="range" min="0" max="1.0" step="0.01" value="0.8">
+        <span class="pill"><span id="volumeVal">0.80</span></span>
+      </div>
+      <div class="row">
+        <label>Octave</label>
+        <input id="octave" type="range" min="-2" max="3" step="1" value="0">
+        <span class="pill"><span id="octaveVal">0</span></span>
+      </div>
+
+      <div class="section-title">Legend</div>
+      <div class="legend">
+        <span class="pill"><span class="swatch sw-white"></span> Natural</span>
+        <span class="pill"><span class="swatch sw-black"></span> Sharp ♯</span>
+        <span class="pill"><span class="swatch sw-halfsharp"></span> Half-sharp ↑</span>
+        <span class="pill"><span class="swatch sw-halfflat"></span> Half-flat ↓</span>
+      </div>
+
+      <div class="section-title">Activity</div>
+      <canvas id="scope" class="scope"></canvas>
+    </div>
+
+    <div class="panel">
+      <div class="section-title">Keyboard (click or use PC keys)</div>
+      <div id="keyboard" class="keyboard"></div>
+      <div class="sub" style="margin-top:10px">
+        Tip: each key = +50 cents. Hold multiple keys for chords. Use <span class="kbd-inline">[</span>/<span class="kbd-inline">]</span> to shift octave.
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">Built with Web Audio + AudioWorklet. No dependencies.</div>
+
+  <script type="module" src="./scripts/main.js"></script>
+</body>
+</html>
