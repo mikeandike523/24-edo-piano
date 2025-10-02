@@ -1,76 +1,128 @@
-// Keyboard layout & quarter-tone labeling utilities
+// QWERTY-shaped UI + 24-TET mapping (C4 on 'Z')
+// Vertical meaning per column (bottom→top):
+//   natural → natural+qt (↑) → sharp → sharp+qt (♯↑)
+// For E and B columns, there is no sharp/sharp+qt (they are the semitone boundaries).
 
-export const STEPS_PER_OCT = 24; // 24-TET
+export const STEPS_PER_OCT = 24;
 export const A4 = 440;
 export const A4_MIDI = 69;
 export const midiOfC4 = 60;
-const NATURAL_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 
-// Visual/PC layout rows
-export const KEY_ROWS = [
-  [..."ZXCVBNM,./"],
-  [..."ASDFGHJKL;"],
-  [..."QWERTYUIOP"],
-  [..."1234567890"]
-];
-export const KEY_SEQUENCE = KEY_ROWS.flat();
-export const keyToIndex = new Map(KEY_SEQUENCE.map((k,i)=>[k,i]));
+const NAT12 = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 
-export function labelForQuarterIndex(qIndexFromC4){
-  const semitone = Math.floor(qIndexFromC4/2);
-  const quarter = qIndexFromC4 % 2; // even=semitone, odd=between
-  const name12 = NATURAL_NAMES[((semitone%12)+12)%12];
-  let name = name12;
-  let kind = 'natural';
+// Base columns we draw across the screen (starting at C4 on 'Z'):
+// semitone offsets from C: C(0), D(2), E(4), F(5), G(7), A(9), B(11), C5(12), D5(14), E5(16)
+const COLUMN_SEMITONES = [0,2,4,5,7,9,11,12,14,16];
 
-  const isSharp = name.includes('#');
-  if (quarter===1){
-    // Half-sharp marker from the lower semitone
-    kind = 'halfsharp';
-    name = name12.replace('#','♯') + '↑';
-  } else {
-    if (isSharp){ kind='sharp'; name = name.replace('#','♯'); }
-    else { kind='natural'; }
-  }
-  return {name, kind};
-}
+// QWERTY rows’ visible keys per column (undefined = empty slot to keep alignment)
+const ROW_BOTTOM =        ['Z','X','C','V','B','N','M',',','.','/'];                 // natural
+const ROW_ALEFT  =        ['S','D','F','G','H','J','K','L',';'];                     // natural + qt (↑)
+const ROW_QLEFT  =        ['W','E',undefined,'T','Y','U',undefined,'O','P',undefined]; // sharp
+const ROW_NUM    =        ['2','3',undefined,'5','6','7',undefined,'9','0',undefined]; // sharp + qt (♯↑)
 
-export function buildKeyboard(container, onDown, onUp){
-  container.innerHTML = '';
-  KEY_ROWS.forEach((rowChars, rowIdx)=>{
-    const rowDiv = document.createElement('div');
-    rowDiv.className = 'row';
-    rowChars.forEach((ch, i)=>{
-      const idx = KEY_ROWS.slice(0,rowIdx).reduce((a,arr)=>a+arr.length,0) + i;
-      const {name, kind} = labelForQuarterIndex(idx);
-      const keyDiv = document.createElement('div');
-      keyDiv.className = 'key';
-      keyDiv.dataset.key = ch;
-      keyDiv.dataset.index = idx;
-      keyDiv.dataset.kind = kind;
-      keyDiv.innerHTML = `
-        <div class="label">${name}</div>
-        <div class="sub">${ch}</div>
-      `;
-      keyDiv.addEventListener('pointerdown', (e)=>{
-        e.preventDefault();
-        onDown(idx, ch);
-        keyDiv.classList.add('active');
-      });
-      window.addEventListener('pointerup', ()=>{
-        onUp(idx, ch);
-        keyDiv.classList.remove('active');
-      });
-      rowDiv.appendChild(keyDiv);
-    });
-    container.appendChild(rowDiv);
-  });
-}
-
-export function setActiveKeyVisual(rootEl, ch, on){
-  const el = rootEl.querySelector(`.key[data-key="${ch}"]`);
-  if (!el) return;
-  el.classList.toggle('active', on);
-}
+// Expose key->qIndex mapping (filled at build time)
+export const keyToIndex = new Map();
 
 export function normalizeKey(k){ return k.length===1 ? k.toUpperCase() : k; }
+
+function name12(semi){ return NAT12[((semi%12)+12)%12]; }
+function qIndexFromSemitone(semi){ return 2*semi; }
+function labelNatural(semi){ return name12(semi).replace('#',''); } // show natural letter only
+function labelSharp(semi){ return name12(semi).replace('#','♯'); }  // pretty sharp
+
+/**
+ * Build the QWERTY-shaped keyboard with the agreed mapping.
+ * @param {HTMLElement} container
+ * @param {(qIndex:number, pcKey:string)=>void} onDown
+ * @param {(qIndex:number, pcKey:string)=>void} onUp
+ */
+export function buildQwertyKeyboard(container, onDown, onUp){
+  container.innerHTML = '';
+  container.classList.add('keyboard');
+
+  // Helper to make a row
+  const makeRow = (className) => {
+    const row = document.createElement('div');
+    row.className = `kb-row ${className}`;
+    container.appendChild(row);
+    return row;
+  };
+
+  const rowBottom = makeRow('bottom'); // naturals
+  const rowAleft  = makeRow('aleft');  // natural + qt
+  const rowQleft  = makeRow('qleft');  // sharps
+  const rowNum    = makeRow('num');    // sharp + qt
+
+  // Clear mapping first
+  keyToIndex.clear();
+
+  // Iterate columns left→right
+  for (let col = 0; col < COLUMN_SEMITONES.length; col++){
+    const semi = COLUMN_SEMITONES[col];
+
+    // Bottom row: natural
+    addKey(rowBottom, ROW_BOTTOM[col], 'natural',
+      qIndexFromSemitone(semi),
+      labelNatural(semi));
+
+    // A row: natural + quarter-tone (↑)
+    if (ROW_ALEFT[col]){
+      addKey(rowAleft, ROW_ALEFT[col], 'halfsharp',
+        qIndexFromSemitone(semi)+1,
+        labelNatural(semi) + '↑');
+    } else {
+      addSpacer(rowAleft);
+    }
+
+    // Q row: sharp, unless this is E or B column (no sharp)
+    if (ROW_QLEFT[col]){
+      addKey(rowQleft, ROW_QLEFT[col], 'sharp',
+        qIndexFromSemitone(semi+1),
+        labelSharp(semi+1));
+    } else {
+      addSpacer(rowQleft);
+    }
+
+    // Number row: sharp + quarter-tone
+    if (ROW_NUM[col]){
+      addKey(rowNum, ROW_NUM[col], 'halfsharp',
+        qIndexFromSemitone(semi+1)+1,
+        labelSharp(semi+1) + '↑');
+    } else {
+      addSpacer(rowNum);
+    }
+  }
+
+  function addKey(row, pcKey, kind, qIndex, label){
+    const div = document.createElement('div');
+    div.className = 'key';
+    div.dataset.kind = kind;
+    div.dataset.key = pcKey;
+    div.dataset.qindex = String(qIndex);
+    div.innerHTML = `
+      <div class="label">${label}</div>
+      <div class="sub">${pcKey}</div>
+    `;
+    div.addEventListener('pointerdown', (e)=>{ e.preventDefault(); onPointer('down', div); });
+    window.addEventListener('pointerup', ()=> onPointer('up', div));
+    row.appendChild(div);
+
+    keyToIndex.set(pcKey, qIndex);
+  }
+
+  // keeps gaps aligned visually
+  function addSpacer(row){
+    const spacer = document.createElement('div');
+    spacer.style.width = '44px';
+    spacer.style.height = '100%';
+    spacer.style.opacity = '0';
+    row.appendChild(spacer);
+  }
+
+  function onPointer(dir, el){
+    const q = +el.dataset.qindex;
+    const pc = el.dataset.key;
+    if (dir==='down'){ el.classList.add('active'); onDown(q, pc); }
+    else { el.classList.remove('active'); onUp(q, pc); }
+  }
+}

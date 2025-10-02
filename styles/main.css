@@ -5,8 +5,8 @@
   --text:#e6edf3;
   --muted:#9aa7b0;
   --white:#f7fafc;
-  --halfsharp:#2dd4bf;
-  --halfflat:#a78bfa;
+  --halfsharp:#2dd4bf;  /* quarter above (↑) */
+  --halfflat:#a78bfa;   /* (kept for consistency; not used in this layout) */
 }
 
 *{box-sizing:border-box}
@@ -27,6 +27,7 @@ h1{ margin:0 0 8px; font-size:20px; letter-spacing:.2px; font-weight:700; }
   padding:14px 16px 24px;
 }
 @media (max-width: 980px){ .app{ grid-template-columns: 1fr; } }
+
 .panel{
   background:linear-gradient(180deg, #0f1620, var(--panel));
   border:1px solid #1f2a35;
@@ -51,12 +52,13 @@ h1{ margin:0 0 8px; font-size:20px; letter-spacing:.2px; font-weight:700; }
 label{ font-size:13px; color:#c7d1d9 }
 input[type="range"]{ width:100% }
 select, input[type="checkbox"], input[type="range"]{ accent-color: var(--accent); }
-.kbd{ display:flex; flex-wrap:wrap; gap:8px; }
+
 .pill{
   display:inline-flex; align-items:center; gap:8px;
   background:#0e141b; border:1px solid #1c2732; color:#cfe3f1;
   border-radius:999px; padding:8px 10px; font-size:12px;
 }
+
 .legend{ display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
 .swatch{ width:12px; height:12px; border-radius:3px; border:1px solid rgba(255,255,255,.15) }
 .sw-white{ background:var(--white) }
@@ -64,20 +66,31 @@ select, input[type="checkbox"], input[type="range"]{ accent-color: var(--accent)
 .sw-halfsharp{ background:var(--halfsharp) }
 .sw-halfflat{ background:var(--halfflat) }
 
-/* Keyboard grid */
+/* ===================== QWERTY keyboard layout ===================== */
 .keyboard{
   position:relative;
   user-select:none;
   -webkit-user-select:none;
-  display:grid;
-  grid-template-rows: 1fr 1fr 1fr 1fr;
+  display:flex;
+  flex-direction:column;
   gap:8px;
-  height: 360px;
+  padding-bottom:6px;
 }
-.row{ display:flex; gap:6px; justify-content:center; }
+
+.kb-row{
+  display:flex;
+  gap:6px;
+  height:64px;
+}
+
+.kb-row.bottom{ margin-left: 0px; }          /* Z X C V B N M , . / */
+.kb-row.aleft { margin-left: 24px; }         /* A S D F G H J K L ;  */
+.kb-row.qleft { margin-left: 38px; }         /* Q W E R T Y U I O P  */
+.kb-row.num   { margin-left: 56px; }         /* 1 2 3 4 5 6 7 8 9 0  */
+
 .key{
   position:relative;
-  min-width:44px; flex:0 0 44px; height:64px;
+  min-width:44px; flex:0 0 44px; height:100%;
   border-radius:10px; border:1px solid #18222d;
   background:#0f151c; color:#d8e6f3;
   display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -86,20 +99,20 @@ select, input[type="checkbox"], input[type="range"]{ accent-color: var(--accent)
   box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 6px 14px rgba(0,0,0,.35);
   cursor:pointer;
 }
+
 .key[data-kind="natural"]{
   background:linear-gradient(180deg, #f1f5f9, #e2e8f0);
   color:#0b1220; border-color:#b8c2cc;
 }
+.key[data-kind="halfsharp"]{
+  background:linear-gradient(180deg, #1b3837, #112a2a);
+  color:#cfe3f1; border-color:#214545;
+}
 .key[data-kind="sharp"]{
   background:linear-gradient(180deg, #202734, #0f1420);
-  color:#e8eef5;
+  color:#e8eef5; border-color:#1f2a35;
 }
-.key[data-kind="halfsharp"]{
-  background:linear-gradient(180deg, #1b3837, #112a2a); border-color:#214545
-}
-.key[data-kind="halfflat"]{
-  background:linear-gradient(180deg, #2a214a, #1c1539); border-color:#382a6f
-}
+
 .key .label{ font-weight:700; font-size:11px }
 .key .sub{ font-size:10px; opacity:.9 }
 .key.active{
