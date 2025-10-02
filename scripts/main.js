@@ -53,7 +53,9 @@ syncLabels();
 
 // PC keyboard handling
 const down = new Set();
+const enableKeyboardCheckbox = document.getElementById('enableKeyboard');
 window.addEventListener('keydown', async (e)=>{
+  if (!enableKeyboardCheckbox || !enableKeyboardCheckbox.checked) return;
   if (e.repeat) return;
   const key = normalizeKey(e.key);
 
@@ -80,6 +82,7 @@ window.addEventListener('keydown', async (e)=>{
 });
 
 window.addEventListener('keyup', (e)=>{
+  if (!enableKeyboardCheckbox || !enableKeyboardCheckbox.checked) return;
   const key = normalizeKey(e.key);
   if (!keyToIndex.has(key)) return;
   e.preventDefault();
@@ -91,6 +94,16 @@ window.addEventListener('keyup', (e)=>{
 
 // Release any stuck notes when pointer leaves window
 document.body.addEventListener('pointerup', ()=> synth.releaseAll());
+
+if (enableKeyboardCheckbox) {
+  enableKeyboardCheckbox.addEventListener('change', () => {
+    if (!enableKeyboardCheckbox.checked) {
+      synth.releaseAll();
+      down.forEach(key => setActiveByKey(key, false));
+      down.clear();
+    }
+  });
+}
 
 function setActiveByKey(pc, on){
   const elKey = keyboardEl.querySelector(`.key[data-key="${pc}"]`);

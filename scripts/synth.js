@@ -30,11 +30,12 @@ export class QuarterToneSynth {
       outputChannelCount: [2],
       parameterData: { volume: 0.8 }
     });
-    this.gain = this.ctx.createGain();
-    this.analyser = this.ctx.createAnalyser();
-    this.analyser.fftSize = 2048;
+    // this.gain = this.ctx.createGain();
+    // this.analyser = this.ctx.createAnalyser();
+    // this.analyser.fftSize = 2048;
 
-    this.synthNode.connect(this.gain).connect(this.analyser).connect(this.ctx.destination);
+    // this.synthNode.connect(this.gain).connect(this.analyser).connect(this.ctx.destination);
+    this.synthNode.connect(this.ctx.destination);
     this.started = true;
 
     // push initial state
