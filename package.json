@@ -3,15 +3,16 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "dev": "node dev-server.cjs"
+    "dev": "node serve.js --dev",
+    "start": "node serve.js --prod"
   },
+  "type": "module",
   "keywords": [],
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@10.11.0",
   "devDependencies": {
+    "commander": "^14.0.1",
     "node-static": "^0.7.11"
-
   }
-
 }
