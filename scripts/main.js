@@ -21,8 +21,16 @@ buildQwertyKeyboard(
 const el = {
   volume: document.getElementById('volume'),
   octave: document.getElementById('octave'),
+  attack: document.getElementById('attack'),
+  decay: document.getElementById('decay'),
+  sustain: document.getElementById('sustain'),
+  release: document.getElementById('release'),
   volumeVal: document.getElementById('volumeVal'),
   octaveVal: document.getElementById('octaveVal'),
+  attackVal: document.getElementById('attackVal'),
+  decayVal: document.getElementById('decayVal'),
+  sustainVal: document.getElementById('sustainVal'),
+  releaseVal: document.getElementById('releaseVal'),
 };
 
 // MIDI→octave mapping: for C-notes, octave = (MIDI/12) - 1.
@@ -53,6 +61,11 @@ if (hardRefreshBtn) {
   });
 }
 syncLabels();
+// Initialize ADSR labels
+el.attackVal.textContent = parseFloat(el.attack.value).toFixed(3);
+el.decayVal.textContent = parseFloat(el.decay.value).toFixed(3);
+el.sustainVal.textContent = parseFloat(el.sustain.value).toFixed(2);
+el.releaseVal.textContent = parseFloat(el.release.value).toFixed(2);
 ['input','change'].forEach(evt=>{
   el.volume.addEventListener(evt, ()=> { const v=+el.volume.value; el.volumeVal.textContent=v.toFixed(2); synth.setVolume(v); });
   el.octave.addEventListener(evt, ()=> {
@@ -60,6 +73,26 @@ syncLabels();
     const currentOct = BASE_OCTAVE_C + n;
     el.octaveVal.textContent = `C${currentOct}`;
     synth.setOctave(n);
+  });
+  el.attack.addEventListener(evt, ()=> {
+    const v = +el.attack.value;
+    el.attackVal.textContent = v.toFixed(3);
+    synth.setAttack(v);
+  });
+  el.decay.addEventListener(evt, ()=> {
+    const v = +el.decay.value;
+    el.decayVal.textContent = v.toFixed(3);
+    synth.setDecay(v);
+  });
+  el.sustain.addEventListener(evt, ()=> {
+    const v = +el.sustain.value;
+    el.sustainVal.textContent = v.toFixed(2);
+    synth.setSustain(v);
+  });
+  el.release.addEventListener(evt, ()=> {
+    const v = +el.release.value;
+    el.releaseVal.textContent = v.toFixed(2);
+    synth.setRelease(v);
   });
 });
 

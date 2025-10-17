@@ -19,6 +19,11 @@ export class QuarterToneSynth {
     this.held = new Map(); // key -> noteId
 
     this._noteUid = 1;
+    // ADSR envelope parameters (in seconds and level)
+    this.attack = 0.01;
+    this.decay = 0.1;
+    this.sustain = 0.7;
+    this.release = 0.5;
   }
 
   async ensureStarted(){
@@ -45,6 +50,14 @@ export class QuarterToneSynth {
   setVolume(v){
     if (this.synthNode) this.synthNode.parameters.get('volume').setValueAtTime(v, this.ctx.currentTime);
   }
+  /** Set attack time in seconds */
+  setAttack(v){ this.attack = v; }
+  /** Set decay time in seconds */
+  setDecay(v){ this.decay = v; }
+  /** Set sustain level (0-1) */
+  setSustain(v){ this.sustain = v; }
+  /** Set release time in seconds */
+  setRelease(v){ this.release = v; }
   setOctave(n){ this.octaveShift = n|0; }
 
   nextNoteId(){ return this._noteUid++; }
@@ -72,7 +85,14 @@ export class QuarterToneSynth {
     const transposed = midiNote + this.octaveShift * 12;
     const freq = this.freqFromMidi(transposed, qstep);
     this.held.set(keyName, id);
-    this.synthNode.port.postMessage({type:'noteOn', data:{freq, id}});
+    this.synthNode.port.postMessage({
+      type:'noteOn',
+      data: { freq, id,
+        attack: this.attack,
+        decay: this.decay,
+        sustain: this.sustain,
+        release: this.release }
+    });
   }
 
   /**
@@ -104,7 +124,14 @@ export class QuarterToneSynth {
     await this.ensureStarted();
     const id = this.nextNoteId();
     this.held.set(keyName, id);
-    this.synthNode.port.postMessage({type:'noteOn', data:{freq, id}});
+    this.synthNode.port.postMessage({
+      type:'noteOn',
+      data: { freq, id,
+        attack: this.attack,
+        decay: this.decay,
+        sustain: this.sustain,
+        release: this.release }
+    });
   }
 
   /**

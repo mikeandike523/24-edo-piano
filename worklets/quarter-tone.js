@@ -4,25 +4,65 @@
 class PolyVoice {
   constructor(sampleRate) {
     this.sampleRate = sampleRate;
-    this.active = false;
     this.freq = 440;
     this.samples = 0;
     this.noteId = 0;
+    this.state = 'idle';    // envelope state: idle, attack, decay, sustain, release
+    this.envSamples = 0;     // samples in current envelope stage
+    this.attackSamples = 0;
+    this.decaySamples = 0;
+    this.releaseSamples = 0;
+    this.sustainLevel = 0;
   }
-  noteOn(freq, id) {
+  noteOn(freq, id, attackTime, decayTime, sustainLevel, releaseTime) {
     this.freq = freq;
     this.noteId = id;
-    this.active = true;
+    this.state = 'attack';
+    this.envSamples = 0;
     this.samples = 0;
+    this.attackSamples = Math.max(1, Math.floor(attackTime * this.sampleRate));
+    this.decaySamples = Math.max(1, Math.floor(decayTime * this.sampleRate));
+    this.releaseSamples = Math.max(1, Math.floor(releaseTime * this.sampleRate));
+    this.sustainLevel = sustainLevel;
   }
   noteOff(id) {
-    if (this.active && this.noteId === id) this.active = false;
+    if (this.state !== 'idle' && this.noteId === id && this.state !== 'release') {
+      this.state = 'release';
+      this.envSamples = 0;
+    }
   }
   process() {
-    if (!this.active) return 0;
+    let envAmp = 0;
+    switch (this.state) {
+      case 'attack':
+        envAmp = this.envSamples / this.attackSamples;
+        if (this.envSamples++ >= this.attackSamples) {
+          this.state = 'decay';
+          this.envSamples = 0;
+        }
+        break;
+      case 'decay':
+        envAmp = 1 + (this.sustainLevel - 1) * (this.envSamples / this.decaySamples);
+        if (this.envSamples++ >= this.decaySamples) {
+          this.state = 'sustain';
+          this.envSamples = 0;
+        }
+        break;
+      case 'sustain':
+        envAmp = this.sustainLevel;
+        break;
+      case 'release':
+        envAmp = this.sustainLevel * (1 - this.envSamples / this.releaseSamples);
+        if (this.envSamples++ >= this.releaseSamples) {
+          this.state = 'idle';
+        }
+        break;
+      default:
+        return 0;
+    }
     const phase = (2 * Math.PI * this.freq * this.samples) / this.sampleRate;
     this.samples++;
-    return Math.sin(phase);
+    return Math.sin(phase) * envAmp;
   }
 }
 
@@ -37,9 +77,9 @@ class QuarterToneProcessor extends AudioWorkletProcessor {
     this.port.onmessage = (e) => {
       const { type, data } = e.data;
       if (type === "noteOn") {
-        const { freq, id } = data;
+        const { freq, id, attack, decay, sustain, release } = data;
         const v = this._findFreeVoice();
-        v.noteOn(freq, id);
+        v.noteOn(freq, id, attack, decay, sustain, release);
       } else if (type === "noteOff") {
         const { id } = data;
         this.voices.forEach((v) => v.noteOff(id));
@@ -47,7 +87,7 @@ class QuarterToneProcessor extends AudioWorkletProcessor {
     };
   }
   _findFreeVoice() {
-    return this.voices.find((v) => !v.active) || this.voices[0];
+    return this.voices.find((v) => v.state === 'idle') || this.voices[0];
   }
   process(inputs, outputs, parameters) {
     const output = outputs[0];
