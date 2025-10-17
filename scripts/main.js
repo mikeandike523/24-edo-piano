@@ -31,6 +31,7 @@ const el = {
   decayVal: document.getElementById('decayVal'),
   sustainVal: document.getElementById('sustainVal'),
   releaseVal: document.getElementById('releaseVal'),
+  waveform: document.getElementById('waveform'),
 };
 
 // MIDI→octave mapping: for C-notes, octave = (MIDI/12) - 1.
@@ -61,6 +62,14 @@ if (hardRefreshBtn) {
   });
 }
 syncLabels();
+// initialize waveform selector and wire to synth
+if (el.waveform) {
+  // set default waveform on synth
+  synth.setWaveform(el.waveform.value);
+  el.waveform.addEventListener('change', () => {
+    synth.setWaveform(el.waveform.value);
+  });
+}
 // Initialize ADSR labels
 el.attackVal.textContent = parseFloat(el.attack.value).toFixed(3);
 el.decayVal.textContent = parseFloat(el.decay.value).toFixed(3);

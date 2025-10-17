@@ -13,6 +13,7 @@ class PolyVoice {
     this.decaySamples = 0;
     this.releaseSamples = 0;
     this.sustainLevel = 0;
+    this.waveform = 'sine';
   }
   noteOn(freq, id, attackTime, decayTime, sustainLevel, releaseTime) {
     this.freq = freq;
@@ -60,9 +61,24 @@ class PolyVoice {
       default:
         return 0;
     }
-    const phase = (2 * Math.PI * this.freq * this.samples) / this.sampleRate;
+    const t = (this.samples * this.freq) / this.sampleRate;
+    const phase = t - Math.floor(t); // normalized phase [0,1)
+    let sample;
+    switch (this.waveform) {
+      case 'square':
+        sample = phase < 0.5 ? 1 : -1;
+        break;
+      case 'triangle':
+        sample = 1 - 4 * Math.abs(phase - 0.5);
+        break;
+      case 'sawtooth':
+        sample = 2 * phase - 1;
+        break;
+      default: // 'sine'
+        sample = Math.sin(2 * Math.PI * phase);
+    }
     this.samples++;
-    return Math.sin(phase) * envAmp;
+    return sample * envAmp;
   }
 }
 
@@ -83,6 +99,8 @@ class QuarterToneProcessor extends AudioWorkletProcessor {
       } else if (type === "noteOff") {
         const { id } = data;
         this.voices.forEach((v) => v.noteOff(id));
+      } else if (type === "waveform") {
+        this.voices.forEach((v) => { v.waveform = data; });
       }
     };
   }

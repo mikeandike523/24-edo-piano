@@ -24,6 +24,7 @@ export class QuarterToneSynth {
     this.decay = 0.1;
     this.sustain = 0.7;
     this.release = 0.5;
+    this.waveform = 'sine';
   }
 
   async ensureStarted(){
@@ -45,6 +46,8 @@ export class QuarterToneSynth {
 
     // push initial state
     this.setVolume(0.8);
+    // initialize waveform on worklet
+    this.setWaveform(this.waveform);
   }
 
   setVolume(v){
@@ -59,6 +62,13 @@ export class QuarterToneSynth {
   /** Set release time in seconds */
   setRelease(v){ this.release = v; }
   setOctave(n){ this.octaveShift = n|0; }
+  /** Set waveform type ('sine', 'square', 'triangle', 'sawtooth') */
+  setWaveform(type){
+    this.waveform = type;
+    if (this.synthNode) {
+      this.synthNode.port.postMessage({ type: 'waveform', data: type });
+    }
+  }
 
   nextNoteId(){ return this._noteUid++; }
 
