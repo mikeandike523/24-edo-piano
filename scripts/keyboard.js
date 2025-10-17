@@ -9,71 +9,82 @@ export const midiOfC4 = 60;
 
 const NAT12 = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 
-export function normalizeKey(k){ return k.length===1 ? k.toUpperCase() : k; }
-function name12(semi){ return NAT12[((semi%12)+12)%12]; }
-function labelNatural(semi){ return name12(semi).replace('#',''); } // show natural letter only
-function labelSharp(semi){ return name12(semi).replace('#','♯'); }  // pretty sharp
+export function normalizeKey(k){ 
+  return k.length===1 ? k.toUpperCase() : k; 
+}
+function name12(semi){ 
+  return NAT12[((semi%12)+12)%12]; 
+}
+function labelNatural(semi){ 
+  return name12(semi).replace('#',''); 
+} 
+function labelSharp(semi){ 
+  return name12(semi).replace('#','♯'); 
+}
 
 // Expose key->note mapping for runtime keyboard input
 export const keyToIndex = new Map();
 
-/**
- * Explicit per-key bindings (relative to C4 on 'Z').
- * semi = semitone offset from C4; qstep = 0 (normal) or 1 (quarter up).
- * kind controls key color: natural | sharp | halfsharp | inactive
+/** 
+ * Helper to build bindings from a compact pattern.
+ * pattern = [ [pc, semiOffset, qstep, kindFunc], ... ]
  */
+function makeBindings(pattern) {
+  return pattern.map(([pc, semi, qstep, kind]) => {
+    const labelBase = kind === 'sharp' ? labelSharp(semi) : labelNatural(semi);
+    const label = qstep ? labelBase + '↑' : labelBase;
+    return { pc, semi, qstep, kind, label };
+  });
+}
+
+/** 
+ * Define your key layout compactly.
+ * Each array maps one keyboard row.
+ */
+const ROWS = {
+  bottom: [
+    ['Z', 0], ['X', 2], ['C', 4], ['V', 5], ['B', 7],
+    ['N', 9], ['M', 11], [',', 12], ['.', 14], ['/', 16],
+  ],
+  qrow: [
+    ['W', 1], ['E', 3], ['T', 6], ['Y', 8], ['U', 10],
+    ['O', 13], ['P', 15],
+  ],
+  arow: [
+    ['S', 0], ['D', 2], ['F', 4], ['G', 5], ['H', 7],
+    ['J', 9], ['K', 11], ['L', 12], [';', 14], ["'", 16],
+  ],
+  num: [
+    ['3', 1], ['4', 3], ['6', 6], ['7', 8], ['8', 10],
+    ['0', 13], ['-', 15],
+  ]
+};
+
+// Generate all bindings dynamically
 const BINDINGS = [
-  // ===== 12-tone (whites / blacks) =====
-  // Whites (bottom row)
-  { pc:'Z', semi: 0, qstep:0, kind:'natural',   label: labelNatural(0) },   // C
-  { pc:'X', semi: 2, qstep:0, kind:'natural',   label: labelNatural(2) },   // D
-  { pc:'C', semi: 4, qstep:0, kind:'natural',   label: labelNatural(4) },   // E
-  { pc:'V', semi: 5, qstep:0, kind:'natural',   label: labelNatural(5) },   // F
-  { pc:'B', semi: 7, qstep:0, kind:'natural',   label: labelNatural(7) },   // G
-  { pc:'N', semi: 9, qstep:0, kind:'natural',   label: labelNatural(9) },   // A
-  { pc:'M', semi:11, qstep:0, kind:'natural',   label: labelNatural(11) },  // B
-  { pc:',', semi:12, qstep:0, kind:'natural',   label: labelNatural(12) },  // C (next octave)
+  // natural whites
+  ...makeBindings(ROWS.bottom.map(([pc, semi]) => [pc, semi, 0, 'natural'])),
 
-  // Blacks (Q row)
-  { pc:'W', semi: 1, qstep:0, kind:'sharp',     label: labelSharp(1) },     // C#
-  { pc:'E', semi: 3, qstep:0, kind:'sharp',     label: labelSharp(3) },     // D#
-  { pc:'T', semi: 6, qstep:0, kind:'sharp',     label: labelSharp(6) },     // F#
-  { pc:'Y', semi: 8, qstep:0, kind:'sharp',     label: labelSharp(8) },     // G#
-  { pc:'U', semi:10, qstep:0, kind:'sharp',     label: labelSharp(10) },    // A#
+  // sharps (black keys)
+  ...makeBindings(ROWS.qrow.map(([pc, semi]) => [pc, semi, 0, 'sharp'])),
 
-  // ===== Quarter-tones (half-sharp ↑) =====
-  // Quarter above whites that have a black to their right (piano-like): C, D, F, G, A
-  { pc:'S', semi: 0, qstep:1, kind:'halfsharp', label: labelNatural(0)  + '↑' }, // C+0.5
-  { pc:'D', semi: 2, qstep:1, kind:'halfsharp', label: labelNatural(2)  + '↑' }, // D+0.5
-  { pc:'F', semi: 5, qstep:1, kind:'halfsharp', label: labelNatural(5)  + '↑' }, // F+0.5
-  { pc:'G', semi: 7, qstep:1, kind:'halfsharp', label: labelNatural(7)  + '↑' }, // G+0.5
-  { pc:'H', semi: 9, qstep:1, kind:'halfsharp', label: labelNatural(9)  + '↑' }, // A+0.5
+  // halfsharps for naturals
+  ...makeBindings(ROWS.arow.map(([pc, semi]) => [pc, semi, 1, 'halfsharp'])),
 
-  // Quarter above sharps: C#, D#, F#, G#, A#
-  { pc:'2', semi: 1, qstep:1, kind:'halfsharp', label: labelSharp(1)   + '↑' }, // C# +0.5
-  { pc:'3', semi: 3, qstep:1, kind:'halfsharp', label: labelSharp(3)   + '↑' }, // D# +0.5
-  { pc:'5', semi: 6, qstep:1, kind:'halfsharp', label: labelSharp(6)   + '↑' }, // F# +0.5
-  { pc:'6', semi: 8, qstep:1, kind:'halfsharp', label: labelSharp(8)   + '↑' }, // G# +0.5
-  { pc:'7', semi:10, qstep:1, kind:'halfsharp', label: labelSharp(10)  + '↑' }, // A# +0.5
-
-
-  // Tiny but of next octave
-   { pc:'L', semi:12, qstep:1, kind:'halfsharp', label: labelNatural(12) + '↑' }, // C5+0.5
-  { pc:'O', semi:13, qstep:0, kind:'sharp',     label: labelSharp(13)           }, // C#5
-  { pc:'9', semi:13, qstep:1, kind:'halfsharp', label: labelSharp(13) + '↑'     }, // C#5+0.5
-  { pc:'.', semi:14, qstep:0, kind:'natural',   label: labelNatural(14)         }, // D5
-  { pc:';', semi:14, qstep:1, kind:'halfsharp', label: labelNatural(14) + '↑'   }, // D5+0.5
-  { pc:'P', semi:15, qstep:0, kind:'sharp',     label: labelSharp(15)           }, // D#5
-  { pc:'0', semi:15, qstep:1, kind:'halfsharp', label: labelSharp(15) + '↑'     }, // D#5+0.5
-  { pc:'/', semi:16, qstep:0, kind:'natural',   label: labelNatural(16)         }, // E5
+  // halfsharps for sharps
+  ...makeBindings(ROWS.num.map(([pc, semi]) => [pc, semi, 1, 'halfsharp'])),
 ];
 
-// Screen rows for the *visual* keyboard (kept full for realism)
-const ROW_NUM_FULL    = ['1','2','3','4','5','6','7','8','9','0'];
-const ROW_QLEFT_FULL  = ['Q','W','E','R','T','Y','U','I','O','P'];
-const ROW_ALEFT_FULL  = ['A','S','D','F','G','H','J','K','L',';'];
-const ROW_BOTTOM_FULL = ['Z','X','C','V','B','N','M',',','.','/'];
+// optional: populate keyToIndex
+for (const b of BINDINGS) keyToIndex.set(normalizeKey(b.pc), b);
 
+export { BINDINGS };
+
+// Screen rows for the *visual* keyboard
+export const ROW_NUM_FULL    = ['1','2','3','4','5','6','7','8','9','0','-'];
+export const ROW_QLEFT_FULL  = ['Q','W','E','R','T','Y','U','I','O','P'];
+export const ROW_ALEFT_FULL  = ['A','S','D','F','G','H','J','K','L',';',"'"];
+export const ROW_BOTTOM_FULL = ['Z','X','C','V','B','N','M',',','.','/'];
 /**
  * Build the piano-like QWERTY keyboard per the mapping above.
  * @param {HTMLElement} container
