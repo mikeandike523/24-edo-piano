@@ -65,6 +65,8 @@ select, input[type="checkbox"], input[type="range"]{ accent-color: var(--accent)
 .sw-black{ background:#2b2b35 }
 .sw-halfsharp{ background:var(--halfsharp) }
 .sw-halfflat{ background:var(--halfflat) }
+.sw-inactive{ background:#2a2f36 } /* matches grey key body */
+
 
 /* ===================== QWERTY keyboard layout ===================== */
 .keyboard{
@@ -111,6 +113,20 @@ select, input[type="checkbox"], input[type="range"]{ accent-color: var(--accent)
 .key[data-kind="sharp"]{
   background:linear-gradient(180deg, #202734, #0f1420);
   color:#e8eef5; border-color:#1f2a35;
+}
+/* Inactive keys (do not play notes) */
+.key[data-kind="inactive"]{
+  background:linear-gradient(180deg, #1b222c, #161c24);
+  color:#9aa7b0;
+  border-color:#2a3642;
+  border-style:dashed;
+  opacity:.8;
+  cursor:default;
+  pointer-events:none; /* not clickable */
+}
+.key[data-kind="inactive"] .label{
+  font-weight:600;
+  opacity:.9;
 }
 
 .key .label{ font-weight:700; font-size:11px }

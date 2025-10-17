@@ -13,12 +13,16 @@ const NAT12 = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 // semitone offsets from C: C(0), D(2), E(4), F(5), G(7), A(9), B(11), C5(12), D5(14), E5(16)
 const COLUMN_SEMITONES = [0,2,4,5,7,9,11,12,14,16];
 
-// QWERTY rows’ visible keys per column (undefined = empty slot to keep alignment)
-const ROW_BOTTOM =        ['Z','X','C','V','B','N','M',',','.','/'];                 // natural
-const ROW_ALEFT  =        ['S','D','F','G','H','J','K','L',';'];                     // natural + qt (↑)
-const ROW_QLEFT  =        ['W','E',undefined,'T','Y','U',undefined,'O','P',undefined]; // sharp
-const ROW_NUM    =        ['2','3',undefined,'5','6','7',undefined,'9','0',undefined]; // sharp + qt (♯↑)
+// FULL QWERTY rows shown on screen (10 columns per row to align with columns)
+const ROW_BOTTOM_FULL = ['Z','X','C','V','B','N','M',',','.','/'];              // naturals
+const ROW_ALEFT_FULL  = ['A','S','D','F','G','H','J','K','L',';'];              // natural + qt column
+const ROW_QLEFT_FULL  = ['Q','W','E','R','T','Y','U','I','O','P'];              // sharps column
+const ROW_NUM_FULL    = ['1','2','3','4','5','6','7','8','9','0'];              // sharp + qt column
 
+// Which of those FULL-row keys actually play notes (same mapping as before)
+const ROW_ALEFT_ACTIVE = ['S','D','F','G','H','J','K','L',';'];                  // A-row active
+const ROW_QLEFT_ACTIVE = ['W','E',/*gap*/, 'T','Y','U',/*gap*/, 'O','P',/*gap*/]; // Q-row active
+const ROW_NUM_ACTIVE   = ['2','3',/*gap*/, '5','6','7',/*gap*/, '9','0',/*gap*/]; // number-row active
 // Expose key->qIndex mapping (filled at build time)
 export const keyToIndex = new Map();
 
@@ -38,7 +42,6 @@ export function buildQwertyKeyboard(container, onDown, onUp){
   container.innerHTML = '';
   container.classList.add('keyboard');
 
-  // Helper to make a row
   const makeRow = (className) => {
     const row = document.createElement('div');
     row.className = `kb-row ${className}`;
@@ -51,47 +54,64 @@ export function buildQwertyKeyboard(container, onDown, onUp){
   const rowQleft  = makeRow('qleft');  // sharps
   const rowNum    = makeRow('num');    // sharp + qt
 
-  // Clear mapping first
   keyToIndex.clear();
 
-  // Iterate columns left→right
   for (let col = 0; col < COLUMN_SEMITONES.length; col++){
     const semi = COLUMN_SEMITONES[col];
 
-    // Bottom row: natural (no quarter-tone)
-    addKey(rowBottom, ROW_BOTTOM[col], 'natural',
+    // Bottom row: natural (all 10 are active)
+    addActiveKey(
+      rowBottom,
+      ROW_BOTTOM_FULL[col],
+      'natural',
       midiOfC4 + semi, 0,
-      labelNatural(semi));
+      labelNatural(semi)
+    );
 
-    // A row: natural + quarter-tone (↑)
-    if (ROW_ALEFT[col]){
-      addKey(rowAleft, ROW_ALEFT[col], 'halfsharp',
-        midiOfC4 + semi, 1,
-        labelNatural(semi) + '↑');
-    } else {
-      addSpacer(rowAleft);
+    // A-row: show full keys; only some are active
+    {
+      const pcKey = ROW_ALEFT_FULL[col];
+      if (ROW_ALEFT_ACTIVE.includes(pcKey)){
+        addActiveKey(
+          rowAleft, pcKey, 'halfsharp',
+          midiOfC4 + semi, 1,
+          labelNatural(semi) + '↑'
+        );
+      } else {
+        addInactiveKey(rowAleft, pcKey);
+      }
     }
 
-    // Q row: sharp, unless this is E or B column (no sharp)
-    if (ROW_QLEFT[col]){
-      addKey(rowQleft, ROW_QLEFT[col], 'sharp',
-        midiOfC4 + semi + 1, 0,
-        labelSharp(semi+1));
-    } else {
-      addSpacer(rowQleft);
+    // Q-row: show full keys; only some are active (skip E/B sharps)
+    {
+      const pcKey = ROW_QLEFT_FULL[col];
+      if (ROW_QLEFT_ACTIVE.includes(pcKey)){
+        addActiveKey(
+          rowQleft, pcKey, 'sharp',
+          midiOfC4 + semi + 1, 0,
+          labelSharp(semi + 1)
+        );
+      } else {
+        addInactiveKey(rowQleft, pcKey);
+      }
     }
 
-    // Number row: sharp + quarter-tone (♯↑)
-    if (ROW_NUM[col]){
-      addKey(rowNum, ROW_NUM[col], 'halfsharp',
-        midiOfC4 + semi + 1, 1,
-        labelSharp(semi+1) + '↑');
-    } else {
-      addSpacer(rowNum);
+    // Number row: show full keys; only some are active
+    {
+      const pcKey = ROW_NUM_FULL[col];
+      if (ROW_NUM_ACTIVE.includes(pcKey)){
+        addActiveKey(
+          rowNum, pcKey, 'halfsharp',
+          midiOfC4 + semi + 1, 1,
+          labelSharp(semi + 1) + '↑'
+        );
+      } else {
+        addInactiveKey(rowNum, pcKey);
+      }
     }
   }
 
-  function addKey(row, pcKey, kind, midi, qstep, label){
+  function addActiveKey(row, pcKey, kind, midi, qstep, label){
     const div = document.createElement('div');
     div.className = 'key';
     div.dataset.kind = kind;
@@ -109,19 +129,29 @@ export function buildQwertyKeyboard(container, onDown, onUp){
     keyToIndex.set(pcKey, { midi, qstep });
   }
 
-  // keeps gaps aligned visually
-  function addSpacer(row){
-    const spacer = document.createElement('div');
-    spacer.style.width = '44px';
-    spacer.style.height = '100%';
-    spacer.style.opacity = '0';
-    row.appendChild(spacer);
+  function addInactiveKey(row, pcKey){
+    const div = document.createElement('div');
+    div.className = 'key';
+    div.dataset.kind = 'inactive';
+    div.dataset.key = pcKey;
+    div.innerHTML = `
+      <div class="label">${pcKey}</div>
+      <div class="sub">—</div>
+    `;
+    row.appendChild(div);
+    // IMPORTANT: not in keyToIndex, so PC typing won’t trigger anything
   }
 
+  // Fixed: call handlers with midi/qstep (qindex never existed)
   function onPointer(dir, el){
-    const q = +el.dataset.qindex;
     const pc = el.dataset.key;
-    if (dir==='down'){ el.classList.add('active'); onDown(q, pc); }
-    else { el.classList.remove('active'); onUp(q, pc); }
+    const note = { midi: +el.dataset.midi, qstep: +el.dataset.qstep };
+    if (dir==='down'){
+      el.classList.add('active');
+      onDown(note, pc);
+    } else {
+      el.classList.remove('active');
+      onUp(note, pc);
+    }
   }
 }
