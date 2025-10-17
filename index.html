@@ -24,7 +24,7 @@
       <div class="row">
         <label>Octave</label>
         <input id="octave" type="range" min="-2" max="3" step="1" value="0">
-        <span class="pill"><span id="octaveVal">0</span></span>
+        <span class="pill"><span id="octaveVal">C4</span></span>
       </div>
 
 
@@ -44,6 +44,13 @@
       </div>
       <div class="sub" style="margin-top:5px;">Disable keyboard play if other menus not working correctly.</div>
 
+      <div class="section-title">Octave Lock</div>
+      <div class="row">
+        <label for="enableKeyboard">Enable Octave Lock</label>
+        <input id="lockOctave" type="checkbox" checked>
+      </div>
+      <div class="sub" style="margin-top:5px;">Prevent stray taps of octave change keys.</div>
+
       <!-- Oscilloscope removed -->
     </div>
 
@@ -51,7 +58,7 @@
       <div class="section-title">Keyboard (click or use PC keys)</div>
       <div id="keyboard" class="keyboard"></div>
       <div class="sub" style="margin-top:10px">
-        Tip: each key = +50 cents. Hold multiple keys for chords. Use <span class="kbd-inline">[</span>/<span class="kbd-inline">]</span> to shift octave.
+        Tip: each key = +50 cents. Hold multiple keys for chords. Use <span class="kbd-inline">[</span>/<span class="kbd-inline">]</span> to shift octave (when octave lock is off).
       </div>
     </div>
   </div>
