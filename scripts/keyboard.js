@@ -83,10 +83,11 @@ export function buildQwertyKeyboard(container, onDown, onUp){
     return row;
   };
 
-  const rowBottom = makeRow('bottom'); // naturals (visual ZXCVBNM,)
-  const rowAleft  = makeRow('aleft');  // half-sharps over whites
-  const rowQleft  = makeRow('qleft');  // sharps
-  const rowNum    = makeRow('num');    // half-sharps over sharps
+  // Append rows in visual order: top -> bottom
+  const rowNum    = makeRow('num');    // number row (top)
+  const rowQleft  = makeRow('qleft');  // QWERTY row
+  const rowAleft  = makeRow('aleft');  // ASDF row
+  const rowBottom = makeRow('bottom'); // ZXCV row (bottom)
 
   keyToIndex.clear();
 
