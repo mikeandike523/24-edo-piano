@@ -116,18 +116,19 @@ class QuarterToneProcessor extends AudioWorkletProcessor {
             if(output[i].length!== o0length) throw new Error("All outputs must have the same length");
         }
     }
+    const volume = parameters.volume;
     for (let i = 0; i < output[0].length; i++) {
       let s = 0;
       for (let v of this.voices) {
         s += v.process();
       }
-      // out[i] = s * (volume[Math.min(i, volume.length-1)] || volume[0]) * 0.25; // headroom
+      const v = volume.length > 1 ? volume[i] : volume[0];
       for (let ch = 0; ch < output.length; ch++) {
         const out = output[ch];
-        out[i] = s * 0.25; // headroom
+        out[i] = s * v * 0.25; // apply volume with headroom
       }
     }
-    // const volume = parameters.volume.length>1 ? parameters.volume : [parameters.volume[0]];
+    // volume parameter applied per-sample above
 
     return true;
   }

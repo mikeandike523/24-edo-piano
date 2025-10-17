@@ -25,6 +25,8 @@ export class QuarterToneSynth {
     this.sustain = 0.7;
     this.release = 0.5;
     this.waveform = 'sine';
+    // Current output volume (0.0-1.0)
+    this.volume = 0.8;
   }
 
   async ensureStarted(){
@@ -34,7 +36,7 @@ export class QuarterToneSynth {
     this.synthNode = new AudioWorkletNode(this.ctx, 'quarter-tone', {
       numberOfOutputs: 1,
       outputChannelCount: [2],
-      parameterData: { volume: 0.8 }
+      parameterData: { volume: this.volume }
     });
     // this.gain = this.ctx.createGain();
     // this.analyser = this.ctx.createAnalyser();
@@ -44,13 +46,15 @@ export class QuarterToneSynth {
     this.synthNode.connect(this.ctx.destination);
     this.started = true;
 
-    // push initial state
-    this.setVolume(0.8);
+    // push initial state (apply last-set volume)
+    this.setVolume(this.volume);
     // initialize waveform on worklet
     this.setWaveform(this.waveform);
   }
 
   setVolume(v){
+    // record last-set volume and apply to worklet if ready
+    this.volume = v;
     if (this.synthNode) this.synthNode.parameters.get('volume').setValueAtTime(v, this.ctx.currentTime);
   }
   /** Set attack time in seconds */
