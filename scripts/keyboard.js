@@ -55,10 +55,18 @@ const BINDINGS = [
   { pc:'5', semi: 6, qstep:1, kind:'halfsharp', label: labelSharp(6)   + '↑' }, // F# +0.5
   { pc:'6', semi: 8, qstep:1, kind:'halfsharp', label: labelSharp(8)   + '↑' }, // G# +0.5
   { pc:'7', semi:10, qstep:1, kind:'halfsharp', label: labelSharp(10)  + '↑' }, // A# +0.5
-];
 
-// Set of active PC keys for quick lookup
-const ACTIVE_KEYS = new Set(BINDINGS.map(b => b.pc));
+
+  // Tiny but of next octave
+   { pc:'L', semi:12, qstep:1, kind:'halfsharp', label: labelNatural(12) + '↑' }, // C5+0.5
+  { pc:'O', semi:13, qstep:0, kind:'sharp',     label: labelSharp(13)           }, // C#5
+  { pc:'9', semi:13, qstep:1, kind:'halfsharp', label: labelSharp(13) + '↑'     }, // C#5+0.5
+  { pc:'.', semi:14, qstep:0, kind:'natural',   label: labelNatural(14)         }, // D5
+  { pc:';', semi:14, qstep:1, kind:'halfsharp', label: labelNatural(14) + '↑'   }, // D5+0.5
+  { pc:'P', semi:15, qstep:0, kind:'sharp',     label: labelSharp(15)           }, // D#5
+  { pc:'0', semi:15, qstep:1, kind:'halfsharp', label: labelSharp(15) + '↑'     }, // D#5+0.5
+  { pc:'/', semi:16, qstep:0, kind:'natural',   label: labelNatural(16)         }, // E5
+];
 
 // Screen rows for the *visual* keyboard (kept full for realism)
 const ROW_NUM_FULL    = ['1','2','3','4','5','6','7','8','9','0'];
